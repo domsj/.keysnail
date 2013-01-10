@@ -34,9 +34,9 @@ key.setViewKey("a", function (ev, arg) {
                    ext.exec("tanything", arg);
                }, "view all tabs", true);
 
-key.setGlobalKey('C-w', function (ev) {
+/*key.setGlobalKey('C-w', function (ev) {
                 command.copyRegion(ev);
-            }, 'Copy selected text', true);
+            }, 'Copy selected text', true);*/
 
 
 //}}%PRESERVE%
