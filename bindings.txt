@@ -1,0 +1,34 @@
+e             follow link
+E             follow link in new tab
+a             view all tabs
+C-, & M-x     execute
+C-g           quit
+M-:           command interpreter
+:             list and execute commands
+C-x l         urlbar
+C-x g         searchbar
+C-t           open new tab
+C-x t & f     focus to first textarea
+M-n           focus to next textarea
+M-p           focus to previous textarea
+C-x s         focus to first button
+M-p           focus to next button
+M-n           focus to previous button
+M-w & C-w     copy selected text
+C-s & C-r     search (forward, backward)
+C-x k         close tab
+C-c u         undo close tab
+
+C-M-l & l     next tab
+C-M-h & h     previous tab
+
+C-x C-c       exit firefox
+C-x o         select next frame
+
+B             back
+F             forward
+R             reload page
+J             scroll line down
+K             scroll line up
+,             scroll left
+.             scroll right
