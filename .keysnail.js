@@ -38,6 +38,8 @@ key.setViewKey("a", function (ev, arg) {
                 command.copyRegion(ev);
             }, 'Copy selected text', true);*/
 
+plugins.options["hok.hint_keys"] = "asdfghjkl;";
+
 // stop google from taking over keybindings
 plugins.options["kkk.sites"] = ["https?://(www\\.)?google\\.([0-9a-zA-Z]+)"];
 
