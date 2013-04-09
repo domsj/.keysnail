@@ -41,7 +41,8 @@ key.setViewKey("a", function (ev, arg) {
 plugins.options["hok.hint_keys"] = "asdfghjkl;";
 
 // stop google from taking over keybindings
-plugins.options["kkk.sites"] = ["https?://(www\\.)?google\\.([0-9a-zA-Z]+)"];
+plugins.options["kkk.sites"] = ["https?://(www\\.)?google\\.([0-9a-zA-Z]+)",
+                                "https?://github.com/([0-9a-zA-Z]+)"];
 
 
 //}}%PRESERVE%
