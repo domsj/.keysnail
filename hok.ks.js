@@ -5,7 +5,7 @@ var PLUGIN_INFO =
     <name>HoK</name>
     <description>Hit a hint for KeySnail</description>
     <description lang="ja">キーボードでリンクを開く</description>
-    <version>1.3.7</version>
+    <version>1.4.0</version>
     <updateURL>https://github.com/mooz/keysnail/raw/master/plugins/hok.ks.js</updateURL>
     <iconURL>https://github.com/mooz/keysnail/raw/master/plugins/icon/hok.icon.png</iconURL>
     <author mail="stillpedant@gmail.com" homepage="http://d.hatena.ne.jp/mooz/">mooz</author>
@@ -289,9 +289,10 @@ https://github.com/myuhe
 
 const pOptions = plugins.setupOptions("hok", {
     "hint_keys" : {
-        preset: 'qsdfghjkl',
+        preset: 'asdfghjkl',
         description: M({
-            en: "Hints keys (default qsdfghjkl)",
+            en: "Hints keys (default asdfghjkl)",
+            ja: "ヒントに使うキー (デフォルトは asdfghjkl)"
         }),
         type: "string"
     },
@@ -334,7 +335,7 @@ const pOptions = plugins.setupOptions("hok", {
 
     "selector" : {
         preset: 'a[href], input:not([type="hidden"]), textarea, iframe, area, select, button, embed,' +
-            '*[onclick], *[onmouseover], *[onmousedown], *[onmouseup], *[oncommand], *[role="link"], *[role="button"]',
+            '*[onclick], *[onmouseover], *[onmousedown], *[onmouseup], *[oncommand], *[role="link"], *[role="button"], *[role="menuitem"]',
         description: M({
             en: "Selectors API Path query",
             ja: "ヒントの取得に使う Selectors API クエリ"
@@ -615,7 +616,7 @@ function saveLink(elem, skipPrompt) {
 
     try {
         window.urlSecurityCheck(url, doc.nodePrincipal);
-        saveURL(url, text, null, true, skipPrompt, makeURI(url, doc.characterSet));
+        saveURL(url, text, null, true, skipPrompt, makeURI(url, doc.characterSet), doc);
     } catch (e) {}
 }
 
@@ -652,16 +653,12 @@ var useSelector = pOptions["use_selector"] && ("querySelector" in document);
 
 var hok = function () {
     var hintKeys            = pOptions["hint_keys"];
-    var selector            = pOptions["selector"];
-    var xPathExp            = pOptions["xpath"];
     var hintBaseStyle       = pOptions["hint_base_style"];
     var hintColorLink       = pOptions["hint_color_link"];
     var hintColorForm       = pOptions["hint_color_form"];
     var hintColorFocused    = pOptions["hint_color_focused"];
     var hintColorCandidates = pOptions["hint_color_candidates"];
     var elementColorFocused = pOptions["element_color_focused"];
-    var uniqueOnly          = pOptions["unique_only"];
-    var uniqueFire          = pOptions["unique_fire"];
 
     var keyMap = {};
     if (pOptions["user_keymap"])
@@ -719,6 +716,7 @@ var hok = function () {
     function createTextHints(amount) {
         var reverseHints = {};
         var numHints = 0;
+        var uniqueOnly = pOptions["unique_only"];
 
         function next(hint) {
             var l = hint.length;
@@ -919,11 +917,11 @@ var hok = function () {
 
         if (useSelector)
         {
-            result = doc.querySelectorAll(priorQuery || localQuery || selector);
+            result = doc.querySelectorAll(priorQuery || localQuery || pOptions["selector"]);
         }
         else
         {
-            let xpathResult = doc.evaluate(priorQuery || xPathExp, doc, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            let xpathResult = doc.evaluate(priorQuery || pOptions["xpath"], doc, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             result = [];
 
             for (let i = 0, len = xpathResult.snapshotLength; i < len; ++i)
@@ -1101,9 +1099,9 @@ var hok = function () {
                 util.message(x);
             }
 
+            document.removeEventListener('keydown', stopEventPropagation, true);
             document.removeEventListener('keypress', onKeyPress, true);
-            document.removeEventListener('keydown', preventEvent, true);
-            document.removeEventListener('keyup', preventEvent, true);
+            document.removeEventListener('keyup', stopEventPropagation, true);
         }
 
         display.echoStatusBar("");
@@ -1129,14 +1127,13 @@ var hok = function () {
     function onKeyPress(event) {
         var keyStr = key.keyEventToString(event);
 
+        preventEvent(event);
+
         if (!keyMap.hasOwnProperty(keyStr))
         {
             destruction(true);
             return;
         }
-
-        event.preventDefault();
-        event.stopPropagation();
 
         var role = keyMap[keyStr];
 
@@ -1188,7 +1185,7 @@ var hok = function () {
         let foundCount = updateHeaderMatchHints();
 
         // fire if hint is unique
-        if (uniqueFire && !supressUniqueFire) {
+        if (pOptions["unique_fire"] && !supressUniqueFire) {
             if (foundCount == 1 && getAliveLastMatchHint()) {
                 var targetElem = lastMatchHint.element;
                 destruction();
@@ -1198,29 +1195,26 @@ var hok = function () {
         }
     }
 
+    function stopEventPropagation(event) {
+        event.stopPropagation();
+    }
+
     function preventEvent(event) {
         event.preventDefault();
         event.stopPropagation();
     }
 
     function setLocalQuery() {
-        if (pOptions["local_queries"] && typeof content.location.href == "string")
+        let currentPageURL = content.location.href;
+        if (pOptions["local_queries"] && currentPageURL)
         {
-            for (let [, row] in Iterator(pOptions["local_queries"]))
+            for (let [, [targetURLPattern, localSelector, toOverride]]
+                 in Iterator(pOptions["local_queries"]))
             {
-                if (content.location.href.match(row[0]))
+                if (currentPageURL.match(targetURLPattern))
                 {
-                    if (row[2])
-                    {
-                        // not append
-                        localQuery = row[1];
-                    }
-                    else
-                    {
-                        // append
-                        localQuery = selector + ", " + row[1];
-                    }
-
+                    localQuery = toOverride ? localSelector
+                        : pOptions["selector"] + ", " + localSelector;
                     return;
                 }
             }
@@ -1255,16 +1249,19 @@ var hok = function () {
             originalSuspendedStatus = key.suspended;
             key.suspended = true;
 
-            init();
-            setLocalQuery();
-
-            drawHints();
+            try {
+                init();
+                setLocalQuery();
+                drawHints();
+            } catch (x) {
+                hintCount = 0;
+            }
 
             if (hintCount > 1)
             {
+                document.addEventListener('keydown', stopEventPropagation, true);
                 document.addEventListener('keypress', onKeyPress, true);
-                document.addEventListener('keydown', preventEvent, true);
-                document.addEventListener('keyup', preventEvent, true);
+                document.addEventListener('keyup', stopEventPropagation, true);
             }
             else
             {
