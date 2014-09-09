@@ -34,16 +34,14 @@ key.setViewKey("a", function (ev, arg) {
                    ext.exec("tanything", arg);
                }, "view all tabs", true);
 
-/*key.setGlobalKey('C-w', function (ev) {
-                command.copyRegion(ev);
-            }, 'Copy selected text', true);*/
-
 plugins.options["hok.hint_keys"] = "asdfghjkl;";
 
 // stop some sites from taking over keybindings
-plugins.options["kkk.sites"] = ["https?://(www\\.)?google\\.([0-9a-zA-Z]+)",
-                                "https?://github.com/([0-9a-zA-Z]+)",
-                                "https?://(www\\.)?facebook.com/?([0-9a-zA-Z]+)"];
+plugins.options["kkk.sites"] =
+    ["^https?://([0-9a-zA-Z]+\\.)?google\\.([0-9a-zA-Z]+)",
+     "^https?://([0-9a-zA-Z]+\\.)?github\\.([0-9a-zA-Z]+)",
+     "^https?://([0-9a-zA-Z]+\\.)?bitbucket\\.([0-9a-zA-Z]+)",
+     "^https?://([0-9a-zA-Z]+\\.)?facebook\\.([0-9a-zA-Z]+)"]
 
 
 //}}%PRESERVE%
